@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Text, View, TextInput, Button, Alert } from 'react-native';
 import Userapi from './api/Userapi';
 
 const List = () => {
   const [products, setProducts] = useState([]);
+  const [productIdToDelete, setProductIdToDelete] = useState('');
 
   useEffect(() => {
-    // Función para obtener la lista de productos desde la API
     const fetchProducts = async () => {
       try {
         const response = await Userapi.get('/api/getproduct');
@@ -16,9 +16,21 @@ const List = () => {
       }
     };
 
-    // Llamar a la función para obtener productos cuando el componente se monta
     fetchProducts();
-  }, []); // El segundo parámetro del useEffect asegura que la solicitud solo se realice una vez al montar el componente
+  }, []);
+
+  const handleDelete = async () => {
+    try {
+      await Userapi.delete(`/api/deleteproduct/${productIdToDelete}`);
+      setProductIdToDelete(''); // Limpiar el TextInput después de la eliminación
+      // Actualiza la lista de productos después de eliminar uno
+      const response = await Userapi.get('/api/getproduct');
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Error al eliminar el producto:', error.message);
+      Alert.alert('Error', 'No se pudo eliminar el producto.');
+    }
+  };
 
   return (
     <View>
@@ -35,11 +47,21 @@ const List = () => {
           </View>
         )}
       />
+
+      <Text>Eliminar Producto por ID:</Text>
+      <TextInput
+        placeholder="ID del Producto"
+        value={productIdToDelete}
+        onChangeText={(text) => setProductIdToDelete(text)}
+        keyboardType="numeric"
+      />
+      <Button title="Eliminar Producto" onPress={handleDelete} />
     </View>
   );
 };
 
 export default List;
+
 
 
 
